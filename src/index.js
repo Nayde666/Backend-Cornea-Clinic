@@ -338,7 +338,7 @@ app.get('/get-appointments', async ( req, res ) => {
       citas.push(doc.data())
     })
     res.json({
-      'alert': 'succes',
+      'alert': 'success',
       citas
     })
   } catch (error) {
