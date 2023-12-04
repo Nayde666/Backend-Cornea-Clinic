@@ -104,6 +104,37 @@ app.post('/delete-doctor' , ( req, res ) => {
     })
   })
 })
+// --------- Login Doctors ----------
+app.post('/login', (req,res) =>{
+  const{ email, password } = req.body
+  
+  if ( !email || !password ){
+      res.json({ 'alert': 'lack of data' })
+  }
+
+  const doctors = collection(db, 'doctors')
+  getDoc(doc(doctors, email))
+  .then((doctor) => {
+      if(!doctor.exists()){
+          return res.status(200).json({ 
+              'alert': 'Unregistered mail'
+          })
+      } else {
+          bcrypt.compare(password, doctor.data().password, (error, result) => {
+              if( result ){
+                  let data = doctor.data()    
+                  res.json({
+                      'alert': 'success',
+                      name: data.name,
+                      lastname: data.lastname
+                  })
+              } else {
+                  res.json({ 'alert': 'Incorrect password'})
+              }
+          })
+      }
+  })
+}) 
 
 
 // --------- CRUD PATIENTS ---------
@@ -198,7 +229,7 @@ app.get( '/get-patients' , async ( req, res ) => {
       patients.push(doc.data())
     })
     res.json({
-      'alert': 'success',
+      'alert': 'success', 
       patients
     })
   } catch (error) {
@@ -250,25 +281,9 @@ app.post( '/edit-patient', async (req,res) => {
 app.post('/new-appointment', async (req, res) => {
   let { name, email, phone, age, gender, date, time, typeofreservation } = req.body
   // Ensure that the fields are not sent empty.
-  if( !name.length ){
-    res.json({
-      'alert': 'It is necessary to add a name address'
-    })
-  } else if (!email.length){
+  if (!email.length){
     res.json({
       'alert': 'It is necessary to add an e-mail address'
-    })
-  } else if (!phone.length ) {
-    res.json({
-      'alert': 'It is necessary to add a phone'
-    })
-  } else if (!age.length ) {
-    res.json({ 
-      'alert': 'It is necessary to add an age'
-    })
-  } else if(!gender.length){
-    res.json({ 
-      'alert': 'It is necessary to add gender'
     })
   } else if (!date.length){
     res.json({ 
@@ -285,8 +300,7 @@ app.post('/new-appointment', async (req, res) => {
   }
   try {
     /*From the patient collection bring the email to verify 
-    that it exists in order to register an appointment.*/
-
+    that it exists in order to register uan cita.*/
     const patients = collection(db, 'patients')
     const patientDoc = doc(patients, email)
     const patient = await getDoc(patientDoc)
@@ -297,6 +311,7 @@ app.post('/new-appointment', async (req, res) => {
         'alert': 'The user is not registered in the database'
       })
     }
+    const patientData = patient.data()
     // Comparar que el date y time no coincidan con un registro ya guardado
     const citas = collection(db, 'citas')
     const citaOcupada = await getDocs(
@@ -321,20 +336,20 @@ app.post('/new-appointment', async (req, res) => {
         'alert': 'An appointment is already scheduled with this user.'
       })
     }
-    const data = {
-      name,
+    const dataForAppointment = {
+      name: patientData.name,
       email,
-      phone,
-      age,
-      gender,
+      phone: patientData.phone,
+      age: patientData.age,
+      gender: patientData.gender,
       date,
       time,
       typeofreservation
     }
-    setDoc(citaDoc, data).then(() => {
+    setDoc(citaDoc, dataForAppointment).then(() => {
       res.json({
         'alert': 'success',
-        data
+        data: dataForAppointment
       })
     })
   } catch (error) {
@@ -382,12 +397,8 @@ app.post('/delete-appointment' , (req,res)  => {
 })
 // --------- Edit appointments --------- 
 app.post( '/edit-appointment', async (req,res) => {
-  const{ name, email, phone, age, gender, date, time, typeofreservation } = req.body
+  const{ email, date, time, typeofreservation } = req.body
   const edited = await updateDoc(doc(db, 'citas', email), {
-    name,
-    phone,
-    age,
-    gender,
     date,
     time,
     typeofreservation
@@ -403,5 +414,3 @@ app.listen(PORT, () => {
     console.log(`Escuchando Puerto: ${PORT}`)
 })
 
-
-//prueba de node_modules
