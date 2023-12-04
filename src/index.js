@@ -104,6 +104,37 @@ app.post('/delete-doctor' , ( req, res ) => {
     })
   })
 })
+// --------- Login Doctors ----------
+app.post('/login', (req,res) =>{
+  const{ email, password } = req.body
+  
+  if ( !email || !password ){
+      res.json({ 'alert': 'Faltan Datos' })
+  }
+
+  const doctors = collection(db, 'doctors')
+  getDoc(doc(doctors, email))
+  .then((doctor) => {
+      if(!doctor.exists()){
+          return res.status(400).json({ 
+              'alert': 'Correo no registrado'
+          })
+      } else {
+          bcrypt.compare(password, doctor.data().password, (error, result) => {
+              if( result ){
+                  let data = doctor.data()    
+                  res.json({
+                      'alert': 'success',
+                      name: data.name,
+                      lastname: data.lastname
+                  })
+              } else {
+                  res.json({ 'alert': 'Contraseña Incorrecta '})
+              }
+          })
+      }
+  })
+}) 
 
 
 // --------- CRUD PATIENTS ---------
@@ -384,4 +415,3 @@ app.listen(PORT, () => {
 })
 
 
-//prueba de node_modules
