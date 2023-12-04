@@ -109,15 +109,15 @@ app.post('/login', (req,res) =>{
   const{ email, password } = req.body
   
   if ( !email || !password ){
-      res.json({ 'alert': 'Faltan Datos' })
+      res.json({ 'alert': 'lack of data' })
   }
 
   const doctors = collection(db, 'doctors')
   getDoc(doc(doctors, email))
   .then((doctor) => {
       if(!doctor.exists()){
-          return res.status(400).json({ 
-              'alert': 'Correo no registrado'
+          return res.status(200).json({ 
+              'alert': 'Unregistered mail'
           })
       } else {
           bcrypt.compare(password, doctor.data().password, (error, result) => {
@@ -129,7 +129,7 @@ app.post('/login', (req,res) =>{
                       lastname: data.lastname
                   })
               } else {
-                  res.json({ 'alert': 'Contraseña Incorrecta '})
+                  res.json({ 'alert': 'Incorrect password'})
               }
           })
       }
@@ -413,5 +413,3 @@ const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
     console.log(`Escuchando Puerto: ${PORT}`)
 })
-
-
